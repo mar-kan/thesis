@@ -12,9 +12,7 @@ def main():
     data = organizeData(df, len(labels))
 
     # splitting data in training and testing sets
-    train_X, valid_X, train_ground, valid_ground = train_test_split(data, labels, test_size=0.2, random_state=13,
-                                                                    stratify=labels)
-    # print("Testing samples: "+str(len(valid_ground)))
+    train_X, valid_X, train_ground, valid_ground = train_test_split(data, labels, test_size=0.2, random_state=13)
 
     # create model
     nn = NeuralNet(data[0].shape)

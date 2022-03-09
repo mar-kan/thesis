@@ -20,7 +20,7 @@ class NeuralNet:
     filter_size = 4
 
     folds = 15
-    epochs = 200
+    epochs = 250
     batch_size = 128
 
     categories = ["ACC", "BLCA", "BRCA", "CESC", "CHOL", "COAD", "DLBC", "ESCA", "GBM", "HNSC", "KICH",
@@ -54,7 +54,7 @@ class NeuralNet:
 
         self.model.add(layers.Dense(1024, use_bias=True, activation='relu'))
         self.model.add(layers.Dense(512, use_bias=True, activation='relu'))
-        self.model.add(layers.Dense(33, use_bias=True, activation='sigmoid'))
+        self.model.add(layers.Dense(32, use_bias=True, activation='sigmoid'))
 
         # compiling model
         self.model.compile(optimizer=keras.optimizers.Adamax(learning_rate=0.0001),
@@ -97,12 +97,14 @@ class NeuralNet:
             count += 1
 
         end = time.time()
-        print("Training time:"+str(end - start)+" seconds.")
+        print("Training time:" + str(end - start) + " seconds.")
 
         # evaluate model
-        self.plotTraining(all_test, all_pred, acc, val_acc, loss, val_loss)
+        self.evaluateTraining(all_test, all_pred, acc, val_acc, loss, val_loss)
 
-    def plotTraining(self, test, pred, acc, val_acc, loss, val_loss):  # evaluates model
+    def evaluateTraining(self, test, pred, acc, val_acc, loss, val_loss):  # evaluates training
+        print("\n\nResults of validation sets during training.\n")
+
         # plot loss and accuracy for all folds
         plot_accuracy_per_fold(acc, val_acc)
         plot_loss_per_fold(loss, val_loss)
@@ -116,12 +118,14 @@ class NeuralNet:
         pred = [item for sublist in pred for item in sublist]
 
         # printing classification report for all predictions
+        print("Classification Report")
         print(classification_report(test, pred))
 
         print("Mean loss: %.3f" % np.mean(val_loss))
-        print("Mean accuracy: %.3f" % np.mean(val_acc))
+        print("Mean accuracy: %.3f\n\n" % np.mean(val_acc))
 
     def evaluate(self, X_eval, Y_eval):  # evaluates model
+        print("Results of test set.\n")
 
         pred_eval = self.getPredictions(X_eval)
 
@@ -129,7 +133,7 @@ class NeuralNet:
         eval_categories = oneHotEncode(Y_eval)
         sd = np.argmax(eval_categories, axis=1)
 
-        # printing classification report for all predictions
+        print("Classification Report")
         print(classification_report(sd, pred_eval))
 
         # saving classification report to csv
@@ -141,14 +145,15 @@ class NeuralNet:
         # plotting confusion matrix
         plotConfusionMatrix(sd, pred_eval, self.categories)
 
-        print("Evaluation Mean accuracy: %.3f" % np.mean(self.model.evaluate(X_eval, eval_categories)))
+        results = self.model.evaluate(X_eval, eval_categories)
+        print("Mean loss: %.3f" % results[0])
+        print("Mean accuracy: %.3f" % results[1])
 
-    def getPredictions(self, X):  # get model's predictions
+    def getPredictions(self, X):     # get model's predictions
         pred = self.model.predict(X, batch_size=self.batch_size, verbose=1)
         return np.argmax(pred, axis=1)
 
-    def save(self):
-        # saves model
-        self.model.save(os.getcwd() + '/SavedModelodel/model.h5', overwrite=True)
-        self.model.save_weights('/SavedModel/weights.hdf5', overwrite=True)
+    def save(self):     # saves model
+        self.model.save(os.getcwd() + '/SavedModel/model.h5', overwrite=True)
+        self.model.save_weights(os.getcwd() + '/SavedModel/weights.hdf5', overwrite=True)
         # self.model.summary()
